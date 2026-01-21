@@ -302,17 +302,17 @@
 
     // --- Main App Logic ---
 
-    // Dealer Data with Owners
+    // Dealer Data with Owners and Custom Limits
+    // Updated limits as per user request
     const dealers = [
-        { name: "Veer Motors- Shikarpur", owner: "Ravi" },
-        { name: "Al-Uzair Automobiles-Gulaothi", owner: "Abuzar" },
-        { name: "Bhagirathi Motors-Jahangirabad", owner: "Sudhir" },
-        { name: "Shri Ganga Motors-Anupshahr", owner: "Lokendra" },
-        { name: "Shri Balaji Honda-Ahmadgarh", owner: "Harshit" },
-        { name: "HBD Automobile-Jhajhar", owner: "Waseem" }
+        { name: "Veer Motors- Shikarpur", owner: "Ravi", limit: 4875000 },
+        { name: "Al-Uzair Automobiles-Gulaothi", owner: "Abuzar", limit: 6500000 },
+        { name: "Bhagirathi Motors-Jahangirabad", owner: "Sudhir", limit: 3906250 },
+        { name: "Shri Ganga Motors-Anupshahr", owner: "Lokendra", limit: 1000000 },
+        { name: "Shri Balaji Honda-Ahmadgarh", owner: "Harshit", limit: 700000 },
+        { name: "HBD Automobile-Jhajhar", owner: "Waseem", limit: 700000 }
     ];
 
-    const DEFAULT_LIMIT = 5000000; 
     const DEFAULT_WARNING = "We will not be Dispatching Any Stock to You Till the time you Clear This Diversion";
 
     function init() {
@@ -329,7 +329,7 @@
             tr.innerHTML = `
                 <td><strong>${dealer.name}</strong></td>
                 <td><input type="text" id="owner_${index}" value="${dealer.owner}" placeholder="Owner Name"></td>
-                <td><input type="number" id="limit_${index}" value="${DEFAULT_LIMIT}" oninput="calculateRow(${index})"></td>
+                <td><input type="number" id="limit_${index}" value="${dealer.limit}" oninput="calculateRow(${index})"></td>
                 <td><input type="number" id="qty_${index}" placeholder="0" oninput="calculateRow(${index})"></td>
                 <td><input type="text" id="stockVal_${index}" class="readonly-input" readonly value="0"></td>
                 <td><input type="number" id="bal_${index}" placeholder="0" oninput="calculateRow(${index})"></td>
