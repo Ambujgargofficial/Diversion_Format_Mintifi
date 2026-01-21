@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diversion Amount Calculator & Email Generator</title>
+    <style>
+        /* Security Overlay Styles */
+        #authOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #2c3e50; /* Dark Blue-Grey background */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .auth-box {
+            background: #34495e;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+        .pin-input {
+            padding: 12px;
+            font-size: 24px;
+            width: 200px;
+            text-align: center;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            border: 2px solid #95a5a6;
+            background: #ecf0f1;
+            color: #2c3e50;
+            letter-spacing: 5px;
+            font-weight: bold;
+        }
+        .pin-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+        }
+        .instruction {
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #bdc3c7;
+        }
+        .num-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .num-btn {
+            padding: 15px;
+            background: #e74c3c; /* Reddish buttons initially */
+            border: none;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #c0392b;
+        }
+        .num-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+        .num-btn:hover {
+            background: #ff6b6b;
+        }
+
+        /* Main App Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .settings-panel {
+            background-color: #e9ecef;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border-left: 5px solid #007bff;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .setting-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+            white-space: nowrap;
+        }
+        input {
+            width: 90%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .readonly-input {
+            background-color: #f8f9fa;
+            color: #495057;
+            font-weight: bold;
+            border: 1px solid #ced4da;
+        }
+        button.action-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        button.action-btn:hover {
+            background-color: #218838;
+        }
+        
+        /* Email Preview Section */
+        #emailPreview {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 30px;
+            margin-top: 20px;
+            border-radius: 4px;
+            display: none; /* Hidden by default */
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .email-controls {
+            margin-top: 10px;
+            text-align: right;
+            display: none;
+        }
+        .copy-btn {
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Security Overlay -->
+<div id="authOverlay">
+    <div class="auth-box">
+        <h2 style="color: white; margin-bottom: 10px;">Security Check</h2>
+        <p class="instruction">Enter PIN & Select your Secret Number</p>
+        
+        <input type="password" id="authPin" class="pin-input" placeholder="PIN" maxlength="4">
+        
+        <div class="num-grid" id="numGrid">
+            <!-- Numbers will be generated by JS -->
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <h2>Diversion Amount Calculator (Masha Honda)</h2>
+    
+    <!-- Settings Panel -->
+    <div class="settings-panel">
+        <div class="setting-row">
+            <label for="deadlineDate" style="min-width: 140px;"><strong>Payment Deadline:</strong></label>
+            <input type="text" id="deadlineDate" style="flex: 1; font-weight: bold;" placeholder="Date will appear here...">
+        </div>
+        <div class="setting-row">
+            <label for="warningMsg" style="min-width: 140px;"><strong>Warning Text:</strong></label>
+            <input type="text" id="warningMsg" style="flex: 1; font-weight: bold; color: #c82333;" placeholder="Warning message...">
+        </div>
+        <div class="setting-row">
+            <label for="globalRate" style="min-width: 140px;"><strong>Rate per Unit:</strong></label>
+            <input type="number" id="globalRate" style="width: 150px; font-weight: bold;" value="70000" oninput="calculateAll()">
+            <span style="color: #666; font-size: 0.9em;">(Changing this updates all dealers)</span>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 18%;">Dealer Name</th>
+                <th style="width: 12%;">Owner Name</th>
+                <th style="width: 12%;">Total Limit</th>
+                <th style="width: 8%;">Qty</th>
+                <th style="width: 12%;">Stock Value</th>
+                <th style="width: 12%;">Avail. Balance</th>
+                <th style="width: 12%;">Diversion Amt</th>
+                <th style="width: 5%;">Action</th>
+            </tr>
+        </thead>
+        <tbody id="dealerTableBody">
+            <!-- Rows will be generated by JS -->
+        </tbody>
+    </table>
+
+    <div id="emailControls" class="email-controls">
+        <button onclick="copyToClipboard()" class="copy-btn">Copy Email Text</button>
+    </div>
+    <div id="emailPreview"></div>
+</div>
+
+<script>
+    // --- Security Logic ---
+    function initAuth() {
+        const grid = document.getElementById('numGrid');
+        grid.innerHTML = '';
+        
+        // Generate random numbers including 7
+        let numbers = [7];
+        while(numbers.length < 9) {
+            let r = Math.floor(Math.random() * 20) + 1; // Random numbers between 1-20
+            if(!numbers.includes(r) && r !== 7) {
+                numbers.push(r);
+            }
+        }
+        
+        // Shuffle the array
+        numbers.sort(() => Math.random() - 0.5);
+
+        // Create buttons
+        numbers.forEach(num => {
+            let btn = document.createElement('button');
+            btn.className = 'num-btn';
+            btn.innerText = num;
+            // Prevent default form submission if inside form (not here, but good practice)
+            btn.type = "button"; 
+            btn.onclick = () => attemptLogin(num);
+            grid.appendChild(btn);
+        });
+    }
+
+    function attemptLogin(selectedNum) {
+        const pin = document.getElementById('authPin').value;
+        
+        if(pin === "0001" && selectedNum === 7) {
+            // Success
+            document.getElementById('authOverlay').style.transition = "opacity 0.5s";
+            document.getElementById('authOverlay').style.opacity = "0";
+            setTimeout(() => {
+                document.getElementById('authOverlay').style.display = 'none';
+            }, 500);
+        } else {
+            // Failure
+            alert('Access Denied! Incorrect PIN or Wrong Number Selected.');
+            document.getElementById('authPin').value = '';
+            initAuth(); // Reshuffle to prevent pattern guessing
+        }
+    }
+
+    // --- Main App Logic ---
+
+    // Dealer Data with Owners
+    const dealers = [
+        { name: "Veer Motors- Shikarpur", owner: "Ravi" },
+        { name: "Al-Uzair Automobiles-Gulaothi", owner: "Abuzar" },
+        { name: "Bhagirathi Motors-Jahangirabad", owner: "Sudhir" },
+        { name: "Shri Ganga Motors-Anupshahr", owner: "Lokendra" },
+        { name: "Shri Balaji Honda-Ahmadgarh", owner: "Harshit" },
+        { name: "HBD Automobile-Jhajhar", owner: "Waseem" }
+    ];
+
+    const DEFAULT_LIMIT = 5000000; 
+    const DEFAULT_WARNING = "We will not be Dispatching Any Stock to You Till the time you Clear This Diversion";
+
+    function init() {
+        // Initialize Security
+        initAuth();
+
+        // Set the default date and warning message
+        document.getElementById('deadlineDate').value = "tomorrow evening (" + getTomorrowDate() + ")";
+        document.getElementById('warningMsg').value = DEFAULT_WARNING;
+
+        const tbody = document.getElementById('dealerTableBody');
+        dealers.forEach((dealer, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${dealer.name}</strong></td>
+                <td><input type="text" id="owner_${index}" value="${dealer.owner}" placeholder="Owner Name"></td>
+                <td><input type="number" id="limit_${index}" value="${DEFAULT_LIMIT}" oninput="calculateRow(${index})"></td>
+                <td><input type="number" id="qty_${index}" placeholder="0" oninput="calculateRow(${index})"></td>
+                <td><input type="text" id="stockVal_${index}" class="readonly-input" readonly value="0"></td>
+                <td><input type="number" id="bal_${index}" placeholder="0" oninput="calculateRow(${index})"></td>
+                <td><input type="text" id="divAmt_${index}" class="readonly-input" readonly value="0"></td>
+                <td><button class="action-btn" onclick="generateEmail('${dealer.name}', ${index})">Generate</button></td>
+            `;
+            tbody.appendChild(tr);
+            calculateRow(index); 
+        });
+    }
+
+    function formatCurrency(num) {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'decimal',
+            maximumFractionDigits: 0
+        }).format(num);
+    }
+
+    function calculateAll() {
+        // Recalculate every row when global rate changes
+        for(let i=0; i<dealers.length; i++) {
+            calculateRow(i);
+        }
+    }
+
+    function calculateRow(index) {
+        const limitInput = document.getElementById(`limit_${index}`);
+        const globalRateInput = document.getElementById('globalRate');
+        const qtyInput = document.getElementById(`qty_${index}`);
+        const balInput = document.getElementById(`bal_${index}`);
+        
+        const limit = parseFloat(limitInput.value) || 0;
+        const rate = parseFloat(globalRateInput.value) || 0;
+        const qty = parseFloat(qtyInput.value) || 0;
+        const bal = parseFloat(balInput.value) || 0;
+
+        const stockValue = qty * rate;
+        const diversionAmount = limit - stockValue - bal;
+
+        document.getElementById(`stockVal_${index}`).value = formatCurrency(stockValue);
+        document.getElementById(`divAmt_${index}`).value = formatCurrency(diversionAmount);
+
+        const divInput = document.getElementById(`divAmt_${index}`);
+        if(diversionAmount > 0) {
+            divInput.style.color = "red";
+        } else {
+            divInput.style.color = "green";
+        }
+    }
+
+    function getTomorrowDate() {
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const options = { weekday: 'long', month: 'short', day: 'numeric' };
+        let dateString = tomorrow.toLocaleDateString('en-US', options);
+        
+        const day = tomorrow.getDate();
+        let suffix = "th";
+        if (day % 10 === 1 && day !== 11) suffix = "st";
+        else if (day % 10 === 2 && day !== 12) suffix = "nd";
+        else if (day % 10 === 3 && day !== 13) suffix = "rd";
+        
+        return dateString.replace(/\d+/, day + suffix);
+    }
+
+    function generateEmail(dealerName, index) {
+        const limit = document.getElementById(`limit_${index}`).value;
+        const qty = document.getElementById(`qty_${index}`).value || 0;
+        const stockVal = document.getElementById(`stockVal_${index}`).value;
+        const bal = document.getElementById(`bal_${index}`).value || 0;
+        const divAmt = document.getElementById(`divAmt_${index}`).value;
+        
+        // Get owner name
+        let ownerName = document.getElementById(`owner_${index}`).value;
+        if(!ownerName) ownerName = "Owner"; // Fallback if empty
+
+        // Get custom values from settings
+        const customDate = document.getElementById('deadlineDate').value;
+        const customWarning = document.getElementById('warningMsg').value;
+
+        const emailContent = `
+            <strong>Dear ${ownerName} San,</strong><br>
+            <strong>${dealerName}</strong><br><br>
+            Please find below the calculation of the current Diversion Amount based on your assigned limit versus current stock and balance.<br><br>
+            
+            <strong>1. Total Limit Amount:</strong> ${formatCurrency(limit)}<br><br>
+            
+            <strong>2. Less: Current Stock Valuation</strong>
+            <ul>
+                <li>Quantity: ${qty} units</li>
+                <li><strong>Total Stock Value: ${stockVal}</strong></li>
+            </ul>
+            
+            <strong>3. Less: Available Balance:</strong> ${formatCurrency(bal)}<br><br>
+            
+            <span style="font-size: 1.1em;"><strong>Total Diversion Amount: = ${divAmt} Rs.</strong></span><br><br>
+            
+            <strong>Action Required:</strong> Please ensure that this diversion amount of <strong>Rs. ${divAmt}</strong> is invested back into the business account to regularize your limit.<br><br>
+            
+            We expect this amount to be settled by <strong>${customDate}</strong> positively.<br><br>
+            
+            <span class="highlight">${customWarning}</span><br><br>
+            
+            Regards,<br><br>
+            <strong>Pratyush Goel</strong><br>
+            Shri Masha Honda
+        `;
+
+        const previewDiv = document.getElementById('emailPreview');
+        previewDiv.innerHTML = emailContent;
+        previewDiv.style.display = 'block';
+        document.getElementById('emailControls').style.display = 'block';
+        
+        previewDiv.scrollIntoView({behavior: "smooth"});
+    }
+
+    function copyToClipboard() {
+        const range = document.createRange();
+        range.selectNode(document.getElementById("emailPreview"));
+        window.getSelection().removeAllRanges(); 
+        window.getSelection().addRange(range); 
+        document.execCommand("copy");
+        window.getSelection().removeAllRanges();
+        alert("Email copied to clipboard!");
+    }
+
+    init();
+
+</script>
+
+</body>
+</html>
