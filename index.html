@@ -408,6 +408,8 @@
         const customDate = document.getElementById('deadlineDate').value;
         const customWarning = document.getElementById('warningMsg').value;
 
+        // Reverted to standard SPAN for Black Text & Yellow Background
+        // Added mso-highlight: yellow for better MS Word compatibility
         const emailContent = `
             <strong>Dear ${ownerName} San,</strong><br>
             <strong>${dealerName}</strong><br><br>
@@ -428,8 +430,7 @@
             <strong>Action Required:</strong> Please ensure that this diversion amount of <strong>Rs. ${divAmt}</strong> is invested back into the business account to regularize your limit.<br><br>
             
             We expect this amount to be settled by <strong>${customDate}</strong> positively.<br><br>
-            
-            <span style="background-color: #ffff00; background: #ffff00; font-weight: bold; border: 1px solid #ffff00; padding: 2px;">${customWarning}</span><br><br>
+            <b><font color="red">${customWarning}</font></b><br><br>
             
             Regards,<br><br>
             <strong>Pratyush Goel</strong><br>
